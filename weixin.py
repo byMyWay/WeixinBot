@@ -100,7 +100,7 @@ class WebWeixin(object):
         self.SpecialUsersList = []  # 特殊账号
         self.autoReplyMode = False
         self.syncHost = ''
-        self.user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36'
+        self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
         self.interactive = False
         self.autoOpen = False
         self.saveFolder = os.path.join(os.getcwd(), 'saved')
@@ -112,7 +112,7 @@ class WebWeixin(object):
         self.memberCount = 0
         self.SpecialUsers = ['newsapp', 'fmessage', 'filehelper', 'weibo', 'qqmail', 'fmessage', 'tmessage', 'qmessage', 'qqsync', 'floatbottle', 'lbsapp', 'shakeapp', 'medianote', 'qqfriend', 'readerapp', 'blogapp', 'facebookapp', 'masssendapp', 'meishiapp', 'feedsapp',
                              'voip', 'blogappweixin', 'weixin', 'brandsessionholder', 'weixinreminder', 'wxid_novlwrv3lqwv11', 'gh_22b87fa7cb3c', 'officialaccounts', 'notification_messages', 'wxid_novlwrv3lqwv11', 'gh_22b87fa7cb3c', 'wxitil', 'userexperience_alarm', 'notification_messages']
-        self.TimeOut = 20  # 同步最短时间间隔（单位：秒）
+        self.TimeOut = 25  # 同步最短时间间隔（单位：秒）
         self.media_count = -1
 
         self.cookie = cookielib.CookieJar()
@@ -319,6 +319,7 @@ class WebWeixin(object):
             'webpush1.wechat.com',
             'webpush2.wechat.com',
             'webpush1.wechatapp.com',
+	    'webpush.wx2.qq.com',
             # 'webpush.wechatapp.com'
         ]
         for host in SyncHost:
@@ -996,13 +997,16 @@ class WebWeixin(object):
 
     def _get(self, url, api=None):
         request = urllib2.Request(url=url)
-        request.add_header('Referer', 'https://wx.qq.com/')
+        request.add_header('Referer', 'https://wx2.qq.com/')
         if api == 'webwxgetvoice':
             request.add_header('Range', 'bytes=0-')
         if api == 'webwxgetvideo':
             request.add_header('Range', 'bytes=0-')
-        response = urllib2.urlopen(request)
-        data = response.read()
+	try:
+		response = urllib2.urlopen(request)
+		data = response.read()
+	except HTTPError,e:
+		print 'HTTPError:',e
         logging.debug(url)
         return data
 
@@ -1013,11 +1017,15 @@ class WebWeixin(object):
                 'ContentType', 'application/json; charset=UTF-8')
         else:
             request = urllib2.Request(url=url, data=urllib.urlencode(params))
-        response = urllib2.urlopen(request)
-        data = response.read()
-        if jsonfmt:
-            return json.loads(data, object_hook=_decode_dict)
-        return data
+	try:
+		response = urllib2.urlopen(request)
+		data = response.read()
+		if jsonfmt:
+			return json.loads(data, object_hook=_decode_dict)
+		return data
+	except HTTPError, e:
+		print 'HTTPError:',e
+	return None
 
     def _xiaodoubi(self, word):
         url = 'http://www.xiaodoubi.com/bot/chat.php'
