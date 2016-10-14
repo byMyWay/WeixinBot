@@ -1005,7 +1005,7 @@ class WebWeixin(object):
 	try:
 		response = urllib2.urlopen(request)
 		data = response.read()
-	except HTTPError,e:
+	except urllib2.HTTPError,e:
 		print 'HTTPError:',e
         logging.debug(url)
         return data
@@ -1023,7 +1023,7 @@ class WebWeixin(object):
 		if jsonfmt:
 			return json.loads(data, object_hook=_decode_dict)
 		return data
-	except HTTPError, e:
+	except urllib2.HTTPError, e:
 		print 'HTTPError:',e
 	return None
 
